@@ -23,12 +23,15 @@ var (
 	}
 )
 
+// ! pay line 補齊
+// ! TraverseLengthTreeFast index err處理
 func main() {
 	slot.TreeInit()
 	slot.Node.PrintTreeHorizontal("", true)
 
 	time1 := time.Now()
 	slot.Node.ReplaceReel(reel)
+	fmt.Println("===============================")
 	slot.PayData(slot.Node.TraverseLengthTree())
 	fmt.Println("-----------reel end")
 	slot.Node.ReplaceReel(reel1)
@@ -40,19 +43,20 @@ func main() {
 	slot.Node.ReplaceReel(reel3)
 	slot.PayData(slot.Node.TraverseLengthTree())
 	fmt.Println("-----------reel3 end")
-	fmt.Println(time.Since(time1))
+	t := time.Since(time1)
+	fmt.Println("===============================")
 	time1 = time.Now()
 	slot.Node.ReplaceReel(reel)
-	slot.PayData(slot.Node.TraverseLengthTree())
+	slot.PayData(slot.TraverseLengthTreeFast())
 	fmt.Println("-----------reel end")
 	slot.Node.ReplaceReel(reel1)
-	slot.PayData(slot.Node.TraverseLengthTree())
+	slot.PayData(slot.TraverseLengthTreeFast())
 	fmt.Println("-----------reel1 end")
 	slot.Node.ReplaceReel(reel2)
-	slot.PayData(slot.Node.TraverseLengthTree())
+	slot.PayData(slot.TraverseLengthTreeFast())
 	fmt.Println("-----------reel2 end")
 	slot.Node.ReplaceReel(reel3)
-	slot.PayData(slot.Node.TraverseLengthTree())
+	slot.PayData(slot.TraverseLengthTreeFast())
 	fmt.Println("-----------reel3 end")
-	fmt.Println(time.Since(time1))
+	fmt.Printf("TraverseLengthTree : %v ,TraverseLengthTreeFast : %v \n", t, time.Since(time1))
 }
