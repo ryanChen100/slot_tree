@@ -7,7 +7,7 @@ type SlotData struct {
 	PayLineMap     map[int][]int
 	payLineSetting [][]int //
 	PaySetting     [][]int
-	siteMap map[int][]*node // 用來加速查找 site 節點
+	siteMap        map[int][]*node // 用來加速查找 site 節點
 }
 
 // Node 樹節點
@@ -143,25 +143,25 @@ func (n *node) TraverseLengthTree() []ResultTree {
 		return nil
 	}
 
-	// 初始化 path 和 sitePath
-	var path []string
-	var sitePath []int
-
-	return n.traverse(path, sitePath)
+	path := make([]string, 0) // 初始化 path
+	return n.traverse(path)   // 傳遞 path 指標
 }
 
-// traverse 遞迴遍歷樹
-func (n *node) traverse(path []string, sitePath []int) []ResultTree {
-	// 去掉根節點
+func (n *node) traverse(path []string) []ResultTree {
+	// 避免 root(-1) 被加入 path
 	if n.site >= 0 {
-		path = append(path, n.symbol)
-		sitePath = append(sitePath, n.site)
+		path = append(path, n.symbol) // 使用值傳遞，確保不影響其他遞迴分支
 	}
 
-	// 至少中 min，進入多一輪才能判斷實際擊中數
+	// 預計擊中數
 	realLen := len(path) - 1
-	if len(path) > 1 {
-		if checkWild(path, len(path)) != checkWild(path, len(path)-1) && checkWild(path, len(path)-1) != AllWild {
+
+	// 優化 checkWild，減少多次函數呼叫
+	if realLen > 0 {
+		wildCheck1 := checkWild(path, len(path))
+		wildCheck2 := checkWild(path, len(path)-1)
+
+		if wildCheck1 != wildCheck2 && wildCheck2 != AllWild {
 			if realLen >= min {
 				return []ResultTree{{count: realLen, symbol: path[:realLen], lineIndex: n.lineIndex}}
 			}
@@ -169,96 +169,21 @@ func (n *node) traverse(path []string, sitePath []int) []ResultTree {
 		}
 	}
 
-	// 全中
+	// 如果已經達到最大 row 數，回傳結果
 	if len(path) == row {
 		return []ResultTree{{count: len(path), symbol: path, lineIndex: n.lineIndex}}
 	}
 
-	var res []ResultTree
+	// 遞迴遍歷子節點，預分配 res 容量
+	res := make([]ResultTree, 0, len(n.children))
 	for _, child := range n.children {
-		res = append(res, child.traverse(path, sitePath)...)
+		res = append(res, child.traverse(path)...) // 傳遞新 slice 副本
 	}
+
 	return res
 }
 
-// TraverseLengthTreeFast 提高算線方式
-// TODO 待驗證
-// func (s *SlotData) TraverseLengthTreeFast() []ResultTree {
-// 	if s.Node == nil {
-// 		return nil
-// 	}
-
-// 	var results []ResultTree
-
-// 	// 遍歷所有支付線
-// 	for lineIndex, lineSet := range s.payLineSetting {
-// 		var path []string
-// 		var sitePath []int
-
-// 		// 直接按照支付線順序抓取符號
-// 		for _, pos := range lineSet {
-// 			node := s.findNodeBySite(s.Node, pos)
-// 			if node != nil {
-// 				path = append(path, node.symbol)
-// 				sitePath = append(sitePath, node.site)
-// 			}
-// 		}
-
-// 		// 如果路徑長度小於 min，直接跳過
-// 		if len(path) < min {
-// 			continue
-// 		}
-
-// 		// 檢查中獎條件
-// 		count := checkWinningPattern(path)
-// 		if count >= min {
-// 			// 使用 cache 加速
-// 			key := fmt.Sprintf("%v", path)
-// 			if val, found := s.Cache[key]; found {
-// 				results = append(results, val)
-// 			} else {
-// 				result := ResultTree{count: count, symbol: path[:count], lineIndex: lineIndex}
-// 				s.Cache[key] = result
-// 				results = append(results, result)
-// 			}
-// 		}
-// 	}
-// 	return results
-// }
-
-func (s *SlotData) findNodeBySite(n *node, site int) *node {
-	if n == nil {
-		return nil
-	}
-	if n.site == site {
-		return n
-	}
-	for _, child := range n.children {
-		if res := s.findNodeBySite(child, site); res != nil {
-			return res
-		}
-	}
-	return nil
-}
-
-func checkWinningPattern(path []string) int {
-	if len(path) < min {
-		return 0
-	}
-
-	count := 1
-	for i := 1; i < len(path); i++ {
-		if path[i] == path[i-1] || path[i] == Wild || path[i-1] == Wild {
-			count++
-		} else {
-			break
-		}
-	}
-
-	return count
-}
-
-// ReplaceReel 替換輪帶
+// ReplaceReel 替換輪帶 透過遞歸的方式一個一個查詢在替換
 func (n *node) ReplaceReel(reel [][]string) {
 	for i := range reel {
 		siteX := i * 10
@@ -268,7 +193,7 @@ func (n *node) ReplaceReel(reel [][]string) {
 	}
 }
 
-// ReplaceReel 替換輪帶
+// ReplaceReel 依賴於SlotData 替換輪帶 使用map方式替換欲取代位置
 func (s *SlotData) ReplaceReel(reel [][]string) {
 	for i := range reel {
 		siteX := i * 10

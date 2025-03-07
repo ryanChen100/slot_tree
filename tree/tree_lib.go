@@ -13,15 +13,30 @@ func (n *node) replaceNode(site int, newValue string) {
 	}
 }
 
+// func checkWild(line []string, index int) string {
+// 	if index == 0 {
+// 		return AllWild
+// 	}
+// 	if line[index-1] != Wild {
+// 		return line[index-1]
+// 	}
+
+// 	return checkWild(line, index-1)
+// }
+
 func checkWild(line []string, index int) string {
 	if index == 0 {
 		return AllWild
 	}
-	if line[index-1] != Wild {
-		return line[index-1]
+
+	// **使用迴圈替代遞迴**
+	for i := index - 1; i >= 0; i-- {
+		if line[i] != Wild {
+			return line[i] // 找到第一個非 Wild 的符號
+		}
 	}
 
-	return checkWild(line, index-1)
+	return AllWild // 整條線都是 Wild
 }
 
 // 水平打印樹
